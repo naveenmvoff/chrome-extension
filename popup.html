@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Screen Capture & Recording</title>
+  <style>
+    body {
+      width: 600px;
+      height: 600px;
+      padding: 10px;
+      font-family: Arial, sans-serif;
+    }
+    button {
+      width: 100%;
+      margin: 5px 0;
+      padding: 8px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:disabled {
+      background-color: #cccccc;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    #status {
+      margin-top: 10px;
+      color: #666;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <button id="screenshot">Take Screenshot</button>
+  <button id="startRecording">Start Recording</button>
+  <button id="stopRecording" disabled>Stop Recording</button>
+  <div id="status" class="status"></div>
+  <div id="timer" class="timer"></div>
+  <script src="popup.js"></script>
+</body>
+</html>

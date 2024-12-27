@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Capture screenshots and record screen of active Chrome tab",
+  "version": "1.0",
+  "description": "Capture screenshots and record screen of active Chrome tab",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "downloads",
+    "downloads.shelf",
+    "tabCapture",
+    "desktopCapture",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_icon": "ico1.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [{
+    "matches": ["<all_urls>"],
+    "js": ["content.js"],
+    "run_at": "document_end"
+  }],
+  "icons": {
+    "48": "ico1.png",
+    "128": "ico1.png"
+  },
+  "web_accessible_resources": [{
+    "resources": ["app.html", "app.js"],
+    "matches": ["<all_urls>"]
+  }]
+}

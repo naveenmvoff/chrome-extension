@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Screenshot & Recording Tool</title>
+    <style>
+        body {
+            width: 100%;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 4px;
+            background-color: #4285f4;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #3367d6;
+        }
+        #screenshotOptions {
+            display: none;
+            margin-top: 10px;
+        }
+        #screenshotOptions.show {
+            display: block;
+        }
+        #status {
+            margin-top: 10px;
+            color: #4285f4;
+            font-weight: bold;
+        }
+        #stopRecord {
+            display: none;
+            background-color: #db4437;
+        }
+        #stopRecord:hover {
+            background-color: #c53929;
+        }
+        .folder-section {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .folder-section p {
+            margin: 5px 0;
+        }
+        .folder-label {
+            font-weight: bold;
+            color: #5f6368;
+        }
+        #currentFolder {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #e8f0fe;
+            border-radius: 4px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="folder-section">
+            <p>
+                <span class="folder-label">Save Location:</span>
+                <span id="currentFolder">Downloads</span>
+            </p>
+            <button id="selectFolder">Change Save Location</button>
+        </div>
+
+        <button id="screenshot">Take Screenshot</button>
+        <div id="screenshotOptions">
+            <button id="visiblePart">Capture Visible Part</button>
+            <button id="fullPage">Capture Full Page</button>
+            <button id="selectedArea">Capture Selected Area</button>
+        </div>
+
+        <button id="startRecord">Start Recording</button>
+        <button id="stopRecord">Stop Recording</button>
+        
+        <div id="status"></div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html> 
