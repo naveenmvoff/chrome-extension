@@ -88,17 +88,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             // Minimize the extension window
             chrome.windows.getCurrent(async (currentWindow) => {
-                await chrome.windows.update(currentWindow.id, { state: 'minimized' });
-                
-                const response = await chrome.runtime.sendMessage({ 
-                    action: 'captureSelectedArea'
-                });
+                try {
+                    // First minimize the window
+                    await chrome.windows.update(currentWindow.id, { state: 'minimized' });
+                    
+                    // Then send the capture request
+                    const response = await chrome.runtime.sendMessage({ 
+                        action: 'captureSelectedArea',
+                        windowId: currentWindow.id
+                    });
 
-                if (response.success) {
-                    document.getElementById('status').textContent = 'Area screenshot saved!';
-                    setTimeout(() => {
-                        document.getElementById('status').textContent = '';
-                    }, 2000);
+                    if (response.success) {
+                        document.getElementById('status').textContent = 'Select an area on the page';
+                    } else {
+                        throw new Error(response.error || 'Failed to initialize area selection');
+                    }
+                } catch (error) {
+                    // Restore the window on error
+                    chrome.windows.update(currentWindow.id, { state: 'normal' });
+                    throw error;
                 }
                 screenshotOptions.classList.remove('show');
             });
@@ -187,11 +195,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const reader = new FileReader();
                 
                 reader.onloadend = async () => {
-                    const base64data = reader.result.split(',')[1];
-                    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-                    const filename = `screen-recording-${timestamp}.webm`;
-                    
                     try {
+                        // Get the current save folder
+                        const result = await chrome.storage.local.get(['saveFolder']);
+                        const folderPath = result.saveFolder || 'Downloads';
+                        
+                        // Generate filename with timestamp
+                        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                        const filename = folderPath === 'Downloads' ? 
+                            `screen-recording-${timestamp}.webm` : 
+                            `${folderPath}/screen-recording-${timestamp}.webm`;
+                        
                         // Create a downloadable URL
                         const blobUrl = window.URL.createObjectURL(blob);
                         
@@ -206,6 +220,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 throw new Error(chrome.runtime.lastError.message);
                             } else {
                                 document.getElementById('status').textContent = 'Recording saved!';
+                                setTimeout(() => {
+                                    document.getElementById('status').textContent = '';
+                                }, 2000);
                             }
                         });
                     } catch (error) {

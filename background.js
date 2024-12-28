@@ -292,7 +292,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 // Inject selection tool
                 await chrome.scripting.executeScript({
                     target: { tabId: tabs[0].id },
-                    function: () => {
+                    function: (windowId) => {
                         if (!window.selector) {
                             window.selector = document.createElement('div');
                             window.selector.style.position = 'fixed';
@@ -351,7 +351,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
                                 chrome.runtime.sendMessage({
                                     action: 'selectedArea',
-                                    area: { x, y, width, height }
+                                    area: { x, y, width, height },
+                                    windowId: windowId
                                 });
                             });
 
@@ -364,7 +365,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                                 }
                             });
                         }
-                    }
+                    },
+                    args: [request.windowId]
                 });
 
                 sendResponse({ success: true });
@@ -379,32 +381,72 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === 'selectedArea') {
         chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
             try {
-                const dataUrl = await chrome.tabs.captureVisibleTab(null, { format: 'png' });
+                // Capture the visible tab
+                const dataUrl = await chrome.tabs.captureVisibleTab(null, { 
+                    format: 'png',
+                    quality: 100
+                });
+
+                // Create an image from the captured screenshot
                 const img = await createImageBitmap(await (await fetch(dataUrl)).blob());
                 
+                // Create a canvas with the selected dimensions
                 const canvas = new OffscreenCanvas(request.area.width, request.area.height);
                 const ctx = canvas.getContext('2d');
                 
+                // Draw the selected portion onto the canvas
                 ctx.drawImage(img, 
                     request.area.x, request.area.y, request.area.width, request.area.height,
                     0, 0, request.area.width, request.area.height
                 );
 
+                // Convert canvas to blob and then to data URL
                 const blob = await canvas.convertToBlob({ type: 'image/png' });
-                const url = URL.createObjectURL(blob);
+                const reader = new FileReader();
                 
-                // Generate filename with current save folder
-                const filename = await generateFilename('selected-area-screenshot');
+                reader.onloadend = async () => {
+                    try {
+                        // Generate filename with current save folder
+                        const filename = await generateFilename('selected-area-screenshot');
 
-                await chrome.downloads.download({
-                    url: url,
-                    filename: filename,
-                    saveAs: false
-                });
+                        // Download the screenshot
+                        await chrome.downloads.download({
+                            url: reader.result,
+                            filename: filename,
+                            saveAs: false
+                        });
 
-                URL.revokeObjectURL(url);
+                        // After successful save, restore the extension window
+                        if (request.windowId) {
+                            setTimeout(() => {
+                                chrome.windows.update(request.windowId, { 
+                                    state: 'normal',
+                                    focused: true
+                                });
+                            }, 500);
+                        }
+                    } catch (error) {
+                        console.error('Save selected area error:', error);
+                        // Restore window on error
+                        if (request.windowId) {
+                            chrome.windows.update(request.windowId, { 
+                                state: 'normal',
+                                focused: true
+                            });
+                        }
+                    }
+                };
+
+                reader.readAsDataURL(blob);
             } catch (error) {
                 console.error('Area screenshot error:', error);
+                // Restore window on error
+                if (request.windowId) {
+                    chrome.windows.update(request.windowId, { 
+                        state: 'normal',
+                        focused: true
+                    });
+                }
             }
         });
         return true;
